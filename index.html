@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
 <title>Toy Story 5</title>
+
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZX3NLFJG0J"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZX3NLFJG0J');
+</script>
+
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -15,34 +28,37 @@
     -webkit-user-select: none; user-select: none;
   }
 
-  /* ─── MAIN VIDEO (rex animation) ─── */
+  /* ─── Z-INDEX MAP ───────────────────────────────
+     1   main video
+     5   sensor glow
+     10  touch layer (animation taps)
+     20  begin overlay (Tap to Play)
+     25  trailer button  ← ABOVE begin overlay
+     30  loading spinner
+     50  trailer video
+     55  trailer ended screen
+     60  back button
+  ─────────────────────────────────────────────── */
+
   #video-player {
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    object-fit: cover;
-    z-index: 1;
+    object-fit: cover; z-index: 1;
   }
 
-  /* ─── TRAILER VIDEO (fullscreen overlay) ─── */
   #trailer-player {
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     object-fit: contain;
     background: #000;
-    z-index: 50;
-    display: none;
+    z-index: 50; display: none;
   }
 
-  /* ─── BACK BUTTON (shown during trailer) ─── */
+  /* ─── BACK BUTTON ─── */
   #back-btn {
-    position: fixed;
-    top: 24px; left: 24px;
-    z-index: 60;
-    display: none;
-    align-items: center;
-    gap: 10px;
+    position: fixed; top: 24px; left: 24px;
+    z-index: 60; display: none;
+    align-items: center; gap: 10px;
     background: rgba(0,0,0,0.6);
     border: 2px solid rgba(255,255,255,0.35);
     border-radius: 40px;
@@ -62,16 +78,13 @@
   }
   #back-btn.show { display: flex; }
 
-  /* ─── TRAILER REPLAY / ENDED screen ─── */
+  /* ─── TRAILER ENDED SCREEN ─── */
   #trailer-ended {
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: 55;
-    display: none;
+    z-index: 55; display: none;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: center; justify-content: center;
     gap: 28px;
     background: rgba(0,0,0,0.72);
   }
@@ -80,30 +93,24 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 16px; font-weight: 800;
     letter-spacing: .18em; text-transform: uppercase;
-    color: #fff;
-    padding: 16px 40px;
-    border-radius: 40px;
-    border: none;
+    color: #fff; padding: 16px 40px;
+    border-radius: 40px; border: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    min-width: 240px;
-    text-align: center;
+    min-width: 240px; text-align: center;
   }
   .te-btn-replay { background: #c8001e; }
   .te-btn-back   { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); }
 
   /* ─── TAP TO PLAY shimmer ─── */
   #begin-overlay {
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     z-index: 20;
-    display: flex;
-    align-items: flex-end;
+    display: flex; align-items: flex-end;
     justify-content: center;
     padding-bottom: 52px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    pointer-events: none; /* overlay itself non-interactive */
   }
   #begin-label {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -122,6 +129,9 @@
     -webkit-text-fill-color: transparent;
     animation: shimmer-slide 2.8s ease-in-out infinite, breathe 2.8s ease-in-out infinite;
     filter: drop-shadow(0 2px 10px rgba(0,0,0,0.9));
+    padding: 12px 24px;
+    cursor: pointer;
+    pointer-events: auto; /* only the label is tappable */
   }
   @keyframes shimmer-slide {
     0%   { background-position: 200% 0; }
@@ -133,14 +143,13 @@
     50%       { opacity: 1; }
   }
 
-  /* ─── WATCH TRAILER BUTTON (visible after animation starts) ─── */
+  /* ─── WATCH TRAILER BUTTON ─── z-index 25 = above begin-overlay ─── */
   #trailer-btn {
     position: fixed;
     bottom: 40px; right: 48px;
-    z-index: 15;
+    z-index: 25;
     display: none;
-    align-items: center;
-    gap: 12px;
+    align-items: center; gap: 12px;
     background: #c8001e;
     border-radius: 40px;
     padding: 14px 28px;
@@ -148,6 +157,7 @@
     -webkit-tap-highlight-color: transparent;
     box-shadow: 0 4px 24px rgba(200,0,30,0.5);
     animation: btn-pulse 2.5s ease-in-out infinite;
+    pointer-events: auto;
   }
   #trailer-btn.show { display: flex; }
   #trailer-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
@@ -164,14 +174,10 @@
 
   /* ─── LOADING SPINNER ─── */
   #loading-indicator {
-    position: fixed;
-    top: 50%; left: 50%;
+    position: fixed; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 70;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    z-index: 30; display: none;
+    flex-direction: column; align-items: center; gap: 16px;
   }
   #loading-indicator.show { display: flex; }
   .spinner {
@@ -191,20 +197,16 @@
 
   /* ─── SENSOR GLOW ─── */
   #sensor-glow {
-    position: fixed;
-    left: 50%; top: 72%;
+    position: fixed; left: 50%; top: 72%;
     transform: translate(-50%, -50%);
     width: 140px; height: 140px;
-    z-index: 5;
-    display: none;
-    pointer-events: none;
+    z-index: 5; display: none; pointer-events: none;
   }
   #sensor-glow.active { display: block; }
   .glow-core {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 48px; height: 48px;
-    border-radius: 50%;
+    width: 48px; height: 48px; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,220,60,0.7) 0%, rgba(255,140,0,0.3) 55%, transparent 100%);
     animation: core-pulse 1.6s ease-in-out infinite;
   }
@@ -216,8 +218,7 @@
     position: absolute; top: 50%; left: 50%;
     border-radius: 50%;
     border: 2px solid rgba(255,210,40,0.9);
-    opacity: 0;
-    animation: ring-expand 2s ease-out infinite;
+    opacity: 0; animation: ring-expand 2s ease-out infinite;
   }
   .r1 { width:  52px; height:  52px; animation-delay: 0s; }
   .r2 { width:  90px; height:  90px; animation-delay: 0.65s; }
@@ -227,7 +228,7 @@
     100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
   }
 
-  /* ─── TOUCH LAYER (animation interaction) ─── */
+  /* ─── TOUCH LAYER ─── */
   #touch-layer {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
@@ -235,17 +236,19 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* ─── FULLSCREEN: hide browser chrome when in fullscreen ─── */
+  :fullscreen body,
+  :-webkit-full-screen body {
+    background: #000;
+  }
 </style>
 </head>
 <body>
 
-<!-- Main Rex animation -->
 <video id="video-player" playsinline webkit-playsinline muted preload="metadata"></video>
-
-<!-- Trailer fullscreen -->
 <video id="trailer-player" playsinline webkit-playsinline preload="metadata"></video>
 
-<!-- Sensor glow -->
 <div id="sensor-glow">
   <div class="glow-core"></div>
   <div class="glow-ring r1"></div>
@@ -253,21 +256,17 @@
   <div class="glow-ring r3"></div>
 </div>
 
-<!-- Loading -->
 <div id="loading-indicator">
   <div class="spinner"></div>
   <div class="loading-text">Loading…</div>
 </div>
 
-<!-- Tap to Play -->
-<div id="begin-overlay" onclick="beginExperience()">
-  <div id="begin-label">Tap to Play</div>
+<div id="begin-overlay">
+  <div id="begin-label" onclick="beginExperience()">Tap to Play</div>
 </div>
 
-<!-- Touch layer (animation taps) -->
 <div id="touch-layer" onclick="onTap()"></div>
 
-<!-- Watch Trailer button -->
 <div id="trailer-btn" onclick="openTrailer()">
   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <polygon points="5 3 19 12 5 21 5 3" fill="#fff" stroke="none"/>
@@ -275,7 +274,6 @@
   <span>Watch Trailer</span>
 </div>
 
-<!-- Back button (during trailer) -->
 <div id="back-btn" onclick="closeTrailer()">
   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="15 18 9 12 15 6"/>
@@ -283,14 +281,12 @@
   <span>Back</span>
 </div>
 
-<!-- Trailer ended screen -->
 <div id="trailer-ended">
   <button class="te-btn te-btn-replay" onclick="replayTrailer()">Watch Again</button>
   <button class="te-btn te-btn-back"   onclick="closeTrailer()">← Back to Experience</button>
 </div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
 var CONFIG = {
   videoSrc:   "rex_web.mp4",
   trailerSrc: "trailer_web.mp4",
@@ -301,20 +297,25 @@ var CONFIG = {
   frameBuffer: 0.05
 };
 
-// ─── ANALYTICS ────────────────────────────────────────────
-// Lightweight, no-server analytics via a free counting endpoint.
-// Each event fires a tiny beacon — no personal data, just counts.
-// View your stats at: https://counterapi.dev/  (search namespace: ts5rex)
-var ANALYTICS_NS = "ts5rex";
-function track(event) {
+// ─── GA4 TRACKING ─────────────────────────────────────────
+function track(eventName, params) {
   try {
-    var key = ANALYTICS_NS + "_" + event;
-    // Primary: CounterAPI (free, no account needed)
-    var img = new Image();
-    img.src = "https://counterapi.dev/hit/" + encodeURIComponent(key) + "?t=" + Date.now();
+    if (typeof gtag === 'function') gtag('event', eventName, params || {});
   } catch(e) {}
-  // Also log to console for local debugging
-  console.log("[TS5 Analytics]", event, new Date().toISOString());
+  console.log('[TS5]', eventName, params || '');
+}
+
+// ─── FULLSCREEN HELPER ────────────────────────────────────
+function requestFS() {
+  var el = document.documentElement;
+  try {
+    if      (el.requestFullscreen)       el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Silk / Safari
+    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+    else if (el.msRequestFullscreen)     el.msRequestFullscreen();
+  } catch(e) {
+    console.log('Fullscreen not available:', e.message);
+  }
 }
 
 // ─── STATE ────────────────────────────────────────────────
@@ -322,28 +323,32 @@ var tpIndex       = 0;
 var waitingForTap = false;
 var playing       = false;
 var trailerOpen   = false;
+var fsRequested   = false;
 
-// ─── ELEMENTS ─────────────────────────────────────────────
-var video          = document.getElementById('video-player');
-var trailerVideo   = document.getElementById('trailer-player');
-var beginOverlay   = document.getElementById('begin-overlay');
-var touchLayer     = document.getElementById('touch-layer');
-var sensorGlow     = document.getElementById('sensor-glow');
-var loadingEl      = document.getElementById('loading-indicator');
-var trailerBtn     = document.getElementById('trailer-btn');
-var backBtn        = document.getElementById('back-btn');
-var trailerEnded   = document.getElementById('trailer-ended');
+var video        = document.getElementById('video-player');
+var trailerVideo = document.getElementById('trailer-player');
+var beginOverlay = document.getElementById('begin-overlay');
+var touchLayer   = document.getElementById('touch-layer');
+var sensorGlow   = document.getElementById('sensor-glow');
+var loadingEl    = document.getElementById('loading-indicator');
+var trailerBtn   = document.getElementById('trailer-btn');
+var backBtn      = document.getElementById('back-btn');
+var trailerEnded = document.getElementById('trailer-ended');
 
-// Preload main video src
-video.src   = CONFIG.videoSrc;
+video.src        = CONFIG.videoSrc;
 trailerVideo.src = CONFIG.trailerSrc;
 
-// ─── BEGIN EXPERIENCE ─────────────────────────────────────
+// ─── BEGIN ────────────────────────────────────────────────
 function beginExperience() {
-  track("play_start");
+  // Request fullscreen on first user tap — browser requires a gesture
+  if (!fsRequested) {
+    requestFS();
+    fsRequested = true;
+  }
+
+  track('play_start');
   beginOverlay.style.display = 'none';
   loadingEl.classList.add('show');
-
   tpIndex = 0; waitingForTap = false; playing = false;
   sensorGlow.classList.remove('active');
   trailerBtn.classList.remove('show');
@@ -378,7 +383,7 @@ function beginExperience() {
   }
 }
 
-// ─── TIMEUPDATE (touch points) ────────────────────────────
+// ─── TOUCH POINTS ─────────────────────────────────────────
 video.addEventListener('timeupdate', function() {
   if (!playing || waitingForTap) return;
   if (tpIndex >= CONFIG.touchPoints.length) return;
@@ -387,74 +392,62 @@ video.addEventListener('timeupdate', function() {
     video.pause();
     waitingForTap = true;
     sensorGlow.classList.add('active');
-    track("touchpoint_" + (tpIndex + 1));
+    track('touchpoint_reached', { touchpoint: tpIndex + 1 });
   }
 });
 
-// ─── ON TAP (animation) ───────────────────────────────────
 function onTap() {
   if (!waitingForTap) return;
   waitingForTap = false;
   sensorGlow.classList.remove('active');
   tpIndex++;
-  track("touchpoint_" + tpIndex + "_tapped");
+  track('touchpoint_tapped', { touchpoint: tpIndex });
   video.play().catch(function() {});
 }
 
-// ─── VIDEO ENDED ──────────────────────────────────────────
+// ─── ANIMATION END ────────────────────────────────────────
 video.addEventListener('ended', function() {
   playing = false;
   sensorGlow.classList.remove('active');
   touchLayer.style.display = 'none';
-  // Show both Tap to Play AND Watch Trailer button
   beginOverlay.style.display = 'flex';
   trailerBtn.classList.add('show');
-  track("animation_complete");
+  track('animation_complete');
 });
 
 // ─── OPEN TRAILER ─────────────────────────────────────────
 function openTrailer() {
-  track("trailer_open");
+  track('trailer_open');
   trailerOpen = true;
-
-  // Pause main video if playing
   if (!video.paused) video.pause();
-
   trailerVideo.style.display = 'block';
   trailerVideo.currentTime = 0;
   backBtn.classList.add('show');
   trailerBtn.classList.remove('show');
   trailerEnded.classList.remove('show');
-
-  var p = trailerVideo.play();
-  if (p !== undefined) {
-    p.catch(function(err) { console.warn('Trailer play failed:', err.message); });
-  }
+  trailerVideo.play().catch(function(e) { console.warn('Trailer:', e.message); });
 }
 
 // ─── TRAILER ENDED ────────────────────────────────────────
 trailerVideo.addEventListener('ended', function() {
-  track("trailer_complete");
+  track('trailer_complete');
   trailerEnded.classList.add('show');
 });
 
-// ─── REPLAY TRAILER ───────────────────────────────────────
 function replayTrailer() {
-  track("trailer_replay");
+  track('trailer_replay');
   trailerEnded.classList.remove('show');
   trailerVideo.currentTime = 0;
   trailerVideo.play().catch(function() {});
 }
 
-// ─── CLOSE TRAILER / BACK ─────────────────────────────────
 function closeTrailer() {
-  track("trailer_back");
+  track('trailer_back');
   trailerOpen = false;
   trailerVideo.pause();
   trailerVideo.style.display = 'none';
   backBtn.classList.remove('show');
   trailerEnded.classList.remove('show');
-  // Show Watch Trailer button again on return
   trailerBtn.classList.add('show');
 }
 
@@ -477,8 +470,7 @@ document.addEventListener('touchend', function(e) {
   lastTap = now;
 }, { passive: false });
 
-// ─── TRACK PAGE LOAD ──────────────────────────────────────
-track("page_load");
+track('page_load');
 </script>
 </body>
 </html>
