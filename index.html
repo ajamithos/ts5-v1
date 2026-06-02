@@ -22,23 +22,10 @@
 
   html, body {
     width: 100%; height: 100%;
-    overflow: hidden;
-    background: #000;
+    overflow: hidden; background: #000;
     touch-action: manipulation;
     -webkit-user-select: none; user-select: none;
   }
-
-  /* ─── Z-INDEX MAP ───────────────────────────────
-     1   main video
-     5   sensor glow
-     10  touch layer (animation taps)
-     20  begin overlay (Tap to Play)
-     25  trailer button  ← ABOVE begin overlay
-     30  loading spinner
-     50  trailer video
-     55  trailer ended screen
-     60  back button
-  ─────────────────────────────────────────────── */
 
   #video-player {
     position: fixed; top: 0; left: 0;
@@ -49,9 +36,58 @@
   #trailer-player {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    object-fit: contain;
-    background: #000;
+    object-fit: contain; background: #000;
     z-index: 50; display: none;
+  }
+
+  /* ─── TOUCH LAYER ─── */
+  #touch-layer {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10; display: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ─── INVISIBLE HOTSPOT over video's Watch Trailer button ───
+     Verified position from debug screenshot.
+     To re-debug: uncomment border line.
+  ────────────────────────────────────────────────────────── */
+  #watch-hotspot {
+    position: fixed;
+    left:   71.5%;
+    top:    70.5%;
+    width:  20%;
+    height: 9%;
+    z-index: 20;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: none;
+    /* border: 3px solid red; */
+  }
+  #watch-hotspot.active { display: block; }
+
+  /* ─── END SLATE button (our own — shown after video ends) ─── */
+  #trailer-btn-endslate {
+    position: fixed;
+    bottom: 40px; right: 48px;
+    z-index: 25; display: none;
+    align-items: center; gap: 12px;
+    background: #c8001e; border-radius: 40px;
+    padding: 14px 28px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 24px rgba(200,0,30,0.5);
+    animation: btn-pulse 2.5s ease-in-out infinite;
+  }
+  #trailer-btn-endslate.show { display: flex; }
+  #trailer-btn-endslate svg { width: 22px; height: 22px; flex-shrink: 0; }
+  #trailer-btn-endslate span {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px; font-weight: 800;
+    letter-spacing: .16em; text-transform: uppercase; color: #fff;
+  }
+  @keyframes btn-pulse {
+    0%, 100% { box-shadow: 0 4px 24px rgba(200,0,30,0.5); transform: scale(1); }
+    50%       { box-shadow: 0 6px 32px rgba(200,0,30,0.75); transform: scale(1.03); }
   }
 
   /* ─── BACK BUTTON ─── */
@@ -61,31 +97,25 @@
     align-items: center; gap: 10px;
     background: rgba(0,0,0,0.6);
     border: 2px solid rgba(255,255,255,0.35);
-    border-radius: 40px;
-    padding: 10px 22px 10px 16px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    border-radius: 40px; padding: 10px 22px 10px 16px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
     backdrop-filter: blur(6px);
-    transition: background 0.2s;
   }
-  #back-btn:active { background: rgba(0,0,0,0.85); }
+  #back-btn.show { display: flex; }
   #back-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
   #back-btn span {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 15px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    color: #fff;
+    letter-spacing: .08em; text-transform: uppercase; color: #fff;
   }
-  #back-btn.show { display: flex; }
 
   /* ─── TRAILER ENDED SCREEN ─── */
   #trailer-ended {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     z-index: 55; display: none;
-    flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 28px;
+    flex-direction: column; align-items: center;
+    justify-content: center; gap: 28px;
     background: rgba(0,0,0,0.72);
   }
   #trailer-ended.show { display: flex; }
@@ -94,44 +124,36 @@
     font-size: 16px; font-weight: 800;
     letter-spacing: .18em; text-transform: uppercase;
     color: #fff; padding: 16px 40px;
-    border-radius: 40px; border: none;
-    cursor: pointer;
+    border-radius: 40px; border: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     min-width: 240px; text-align: center;
   }
   .te-btn-replay { background: #c8001e; }
   .te-btn-back   { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); }
 
-  /* ─── TAP TO PLAY shimmer ─── */
+  /* ─── TAP TO PLAY ─── */
   #begin-overlay {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: 20;
-    display: flex; align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 52px;
-    pointer-events: none; /* overlay itself non-interactive */
+    z-index: 25; display: flex;
+    align-items: flex-end; justify-content: center;
+    padding-bottom: 52px; pointer-events: none;
   }
   #begin-label {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 17px; font-weight: 800;
     letter-spacing: 0.26em; text-transform: uppercase;
-    background: linear-gradient(
-      105deg,
+    background: linear-gradient(105deg,
       #ffffff 0%, #ffffff 30%,
       #FFD700 42%, #FF4500 50%,
       #FFD700 58%, #ffffff 70%, #ffffff 100%
     );
-    background-size: 300% 100%;
-    background-position: 200% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
+    background-size: 300% 100%; background-position: 200% 0;
+    -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shimmer-slide 2.8s ease-in-out infinite, breathe 2.8s ease-in-out infinite;
     filter: drop-shadow(0 2px 10px rgba(0,0,0,0.9));
-    padding: 12px 24px;
-    cursor: pointer;
-    pointer-events: auto; /* only the label is tappable */
+    padding: 12px 24px; cursor: pointer; pointer-events: auto;
   }
   @keyframes shimmer-slide {
     0%   { background-position: 200% 0; }
@@ -143,105 +165,59 @@
     50%       { opacity: 1; }
   }
 
-  /* ─── WATCH TRAILER BUTTON ─── z-index 25 = above begin-overlay ─── */
-  #trailer-btn {
-    position: fixed;
-    bottom: 40px; right: 48px;
-    z-index: 25;
-    display: none;
-    align-items: center; gap: 12px;
-    background: #c8001e;
-    border-radius: 40px;
-    padding: 14px 28px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 4px 24px rgba(200,0,30,0.5);
-    animation: btn-pulse 2.5s ease-in-out infinite;
-    pointer-events: auto;
-  }
-  #trailer-btn.show { display: flex; }
-  #trailer-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
-  #trailer-btn span {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 15px; font-weight: 800;
-    letter-spacing: .16em; text-transform: uppercase;
-    color: #fff;
-  }
-  @keyframes btn-pulse {
-    0%, 100% { box-shadow: 0 4px 24px rgba(200,0,30,0.5); transform: scale(1); }
-    50%       { box-shadow: 0 6px 32px rgba(200,0,30,0.75); transform: scale(1.03); }
-  }
-
   /* ─── LOADING SPINNER ─── */
   #loading-indicator {
     position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 30; display: none;
+    transform: translate(-50%,-50%);
+    z-index: 40; display: none;
     flex-direction: column; align-items: center; gap: 16px;
   }
   #loading-indicator.show { display: flex; }
   .spinner {
     width: 48px; height: 48px;
     border: 4px solid rgba(255,215,0,0.2);
-    border-top-color: #FFD700;
-    border-radius: 50%;
+    border-top-color: #FFD700; border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text {
-    font-family: -apple-system, sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .18em; text-transform: uppercase;
-    color: rgba(255,215,0,0.7);
+    font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase; color: rgba(255,215,0,0.7);
   }
 
   /* ─── SENSOR GLOW ─── */
   #sensor-glow {
     position: fixed; left: 50%; top: 72%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%,-50%);
     width: 140px; height: 140px;
     z-index: 5; display: none; pointer-events: none;
   }
   #sensor-glow.active { display: block; }
   .glow-core {
     position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%,-50%);
     width: 48px; height: 48px; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,220,60,0.7) 0%, rgba(255,140,0,0.3) 55%, transparent 100%);
     animation: core-pulse 1.6s ease-in-out infinite;
   }
   @keyframes core-pulse {
-    0%, 100% { transform: translate(-50%,-50%) scale(1);    opacity: 0.75; }
+    0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.75; }
     50%       { transform: translate(-50%,-50%) scale(1.35); opacity: 1; }
   }
   .glow-ring {
     position: absolute; top: 50%; left: 50%;
-    border-radius: 50%;
-    border: 2px solid rgba(255,210,40,0.9);
+    border-radius: 50%; border: 2px solid rgba(255,210,40,0.9);
     opacity: 0; animation: ring-expand 2s ease-out infinite;
   }
-  .r1 { width:  52px; height:  52px; animation-delay: 0s; }
-  .r2 { width:  90px; height:  90px; animation-delay: 0.65s; }
+  .r1 { width: 52px; height: 52px; animation-delay: 0s; }
+  .r2 { width: 90px; height: 90px; animation-delay: 0.65s; }
   .r3 { width: 140px; height: 140px; animation-delay: 1.3s; }
   @keyframes ring-expand {
     0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0.95; }
-    100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+    100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
   }
 
-  /* ─── TOUCH LAYER ─── */
-  #touch-layer {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 10; display: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* ─── FULLSCREEN: hide browser chrome when in fullscreen ─── */
-  :fullscreen body,
-  :-webkit-full-screen body {
-    background: #000;
-  }
+  :fullscreen body, :-webkit-full-screen body { background: #000; }
 </style>
 </head>
 <body>
@@ -267,9 +243,11 @@
 
 <div id="touch-layer" onclick="onTap()"></div>
 
-<div id="trailer-btn" onclick="openTrailer()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="5 3 19 12 5 21 5 3" fill="#fff" stroke="none"/>
+<div id="watch-hotspot" onclick="openTrailer()"></div>
+
+<div id="trailer-btn-endslate" onclick="openTrailer()">
+  <svg viewBox="0 0 24 24" fill="none">
+    <polygon points="5 3 19 12 5 21 5 3" fill="#fff"/>
   </svg>
   <span>Watch Trailer</span>
 </div>
@@ -297,61 +275,55 @@ var CONFIG = {
   frameBuffer: 0.05
 };
 
-// ─── GA4 TRACKING ─────────────────────────────────────────
-function track(eventName, params) {
-  try {
-    if (typeof gtag === 'function') gtag('event', eventName, params || {});
-  } catch(e) {}
-  console.log('[TS5]', eventName, params || '');
+// ─── GA4 ──────────────────────────────────────────────────
+function track(e, p) {
+  try { if (typeof gtag === 'function') gtag('event', e, p || {}); } catch(x) {}
+  console.log('[TS5]', e, p || '');
 }
 
-// ─── FULLSCREEN HELPER ────────────────────────────────────
+// ─── FULLSCREEN ───────────────────────────────────────────
 function requestFS() {
   var el = document.documentElement;
   try {
     if      (el.requestFullscreen)       el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Silk / Safari
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
     else if (el.msRequestFullscreen)     el.msRequestFullscreen();
-  } catch(e) {
-    console.log('Fullscreen not available:', e.message);
-  }
+  } catch(e) {}
 }
 
 // ─── STATE ────────────────────────────────────────────────
 var tpIndex       = 0;
 var waitingForTap = false;
 var playing       = false;
-var trailerOpen   = false;
 var fsRequested   = false;
+var returnState   = 'endslate'; // 'endslate' | 'paused' | 'midplay'
 
-var video        = document.getElementById('video-player');
-var trailerVideo = document.getElementById('trailer-player');
-var beginOverlay = document.getElementById('begin-overlay');
-var touchLayer   = document.getElementById('touch-layer');
-var sensorGlow   = document.getElementById('sensor-glow');
-var loadingEl    = document.getElementById('loading-indicator');
-var trailerBtn   = document.getElementById('trailer-btn');
-var backBtn      = document.getElementById('back-btn');
-var trailerEnded = document.getElementById('trailer-ended');
+// ─── ELEMENTS ─────────────────────────────────────────────
+var video         = document.getElementById('video-player');
+var trailerVideo  = document.getElementById('trailer-player');
+var beginOverlay  = document.getElementById('begin-overlay');
+var touchLayer    = document.getElementById('touch-layer');
+var watchHotspot  = document.getElementById('watch-hotspot');
+var sensorGlow    = document.getElementById('sensor-glow');
+var loadingEl     = document.getElementById('loading-indicator');
+var trailerBtnEnd = document.getElementById('trailer-btn-endslate');
+var backBtn       = document.getElementById('back-btn');
+var trailerEnded  = document.getElementById('trailer-ended');
 
 video.src        = CONFIG.videoSrc;
 trailerVideo.src = CONFIG.trailerSrc;
 
 // ─── BEGIN ────────────────────────────────────────────────
 function beginExperience() {
-  // Request fullscreen on first user tap — browser requires a gesture
-  if (!fsRequested) {
-    requestFS();
-    fsRequested = true;
-  }
-
+  if (!fsRequested) { requestFS(); fsRequested = true; }
   track('play_start');
   beginOverlay.style.display = 'none';
+  trailerBtnEnd.classList.remove('show');
   loadingEl.classList.add('show');
   tpIndex = 0; waitingForTap = false; playing = false;
   sensorGlow.classList.remove('active');
-  trailerBtn.classList.remove('show');
+  watchHotspot.classList.remove('active');
   video.currentTime = 0;
 
   function tryPlay() {
@@ -360,6 +332,7 @@ function beginExperience() {
       p.then(function() {
         loadingEl.classList.remove('show');
         touchLayer.style.display = 'block';
+        watchHotspot.classList.add('active');
         playing = true;
       }).catch(function(err) {
         loadingEl.classList.remove('show');
@@ -369,13 +342,13 @@ function beginExperience() {
     } else {
       loadingEl.classList.remove('show');
       touchLayer.style.display = 'block';
+      watchHotspot.classList.add('active');
       playing = true;
     }
   }
 
-  if (video.readyState >= 3) {
-    tryPlay();
-  } else {
+  if (video.readyState >= 3) { tryPlay(); }
+  else {
     video.addEventListener('canplay', function h() {
       video.removeEventListener('canplay', h);
       tryPlay();
@@ -410,20 +383,33 @@ video.addEventListener('ended', function() {
   playing = false;
   sensorGlow.classList.remove('active');
   touchLayer.style.display = 'none';
+  watchHotspot.classList.remove('active');
+  trailerBtnEnd.classList.add('show');
   beginOverlay.style.display = 'flex';
-  trailerBtn.classList.add('show');
   track('animation_complete');
 });
 
 // ─── OPEN TRAILER ─────────────────────────────────────────
 function openTrailer() {
   track('trailer_open');
-  trailerOpen = true;
+
+  // Record context so Back can restore correctly
+  if (!playing && !waitingForTap) {
+    returnState = 'endslate';
+  } else if (waitingForTap) {
+    returnState = 'paused';
+  } else {
+    returnState = 'midplay';
+  }
+
   if (!video.paused) video.pause();
+  touchLayer.style.display = 'none';
+  watchHotspot.classList.remove('active');
+  trailerBtnEnd.classList.remove('show');
+  beginOverlay.style.display = 'none';
   trailerVideo.style.display = 'block';
   trailerVideo.currentTime = 0;
   backBtn.classList.add('show');
-  trailerBtn.classList.remove('show');
   trailerEnded.classList.remove('show');
   trailerVideo.play().catch(function(e) { console.warn('Trailer:', e.message); });
 }
@@ -441,14 +427,33 @@ function replayTrailer() {
   trailerVideo.play().catch(function() {});
 }
 
+// ─── CLOSE TRAILER / BACK ─────────────────────────────────
 function closeTrailer() {
   track('trailer_back');
-  trailerOpen = false;
   trailerVideo.pause();
   trailerVideo.style.display = 'none';
   backBtn.classList.remove('show');
   trailerEnded.classList.remove('show');
-  trailerBtn.classList.add('show');
+
+  if (returnState === 'endslate') {
+    // Came from end slate — restore Tap to Play + end slate button
+    beginOverlay.style.display = 'flex';
+    trailerBtnEnd.classList.add('show');
+
+  } else if (returnState === 'paused') {
+    // Came from glow pause — restore glow, keep video paused
+    touchLayer.style.display = 'block';
+    watchHotspot.classList.add('active');
+    sensorGlow.classList.add('active');
+    waitingForTap = true;
+
+  } else {
+    // Came from mid-play — resume video
+    touchLayer.style.display = 'block';
+    watchHotspot.classList.add('active');
+    playing = true;
+    video.play().catch(function() {});
+  }
 }
 
 // ─── STALL RECOVERY ───────────────────────────────────────
